@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GIF</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f2eddd; /*  background */
+      flex-direction: column;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <script>
+    let startTime;
+    let ringDuration = 4000; // Duration for the ring transition in milliseconds
+    let mDuration = 3000; // Duration of the "M" 
+    let hexagonDuration = 2000; // Duration for the hexagon 
+    let delayDuration = 100; //  delay duration 
+    let totalDuration; // full transition
+    let mTransitionStartTime;
+    let mStarted = false;
+    let t = 0.5;
+    let expanding = true;
+    let frames = [];
+    let currentFrame = 0;
+    let hexagonStarted = false;
+    let ringStarted = false;
+    let numHexagonFrames = 41; // Total  of hexagon frames
+    let img; 
+    let textSizeFactor = 0;
+
+    function preload() {
+      img = loadImage('logo.png'); 
+    }
+
+    function setup() {
+      createCanvas(1280, 720);
+      startTime = millis();
+
+      // frames
+      frames = [
+        [
+          { radius: 800, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#f2eddd', '#4e4c45'] },
+          { radius: 800, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'] },
+          { radius: 800, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'] },
+          { radius: 800, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'] },
+          { radius: 100, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'] },
+          { radius: 100, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'] }
+        ],
+        [
+          { radius: 800, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#f2eddd', '#4e4c45'] },
+          { radius: 800, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'] },
+          { radius: 760, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'] },
+          { radius: 390, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'] },
+          { radius: 100, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'] },
+          { radius: 100, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'] }
+        ],
+        [
+          { radius: 800, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#f2eddd', '#4e4c45'] },
+          { radius: 800, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'] },
+          { radius: 730, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'] },
+          { radius: 300, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'] },
+          { radius: 100, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'] },
+          { radius: 98, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'] }
+        ],
+        [
+          { radius: 800, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#f2eddd', '#4e4c45'] },
+          { radius: 800, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'] },
+          { radius: 710, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'] },
+          { radius: 290, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'] },
+          { radius: 100, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'] },
+          { radius: 95, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'] }
+        ],
+        [
+          { radius: 800, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#f2eddd', '#4e4c45'] },
+          { radius: 800, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'] },
+          { radius: 700, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'] },
+          { radius: 270, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'] },
+          { radius: 100, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'] },
+          { radius: 90, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'] }
+        ],
+        [
+          { radius: 800, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#f2eddd', '#4e4c45'] },
+          { radius: 800, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'] },
+          { radius: 660, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'] },
+          { radius: 240, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'] },
+          { radius: 100, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'] },
+          { radius: 85, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'] }
+        ],
+        [
+          { radius: 800, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#f2eddd', '#4e4c45'] },
+          { radius: 800, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'] },
+          { radius: 640, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'] },
+          { radius: 220, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'] },
+          { radius: 100, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'] },
+          { radius: 80, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'] }
+        ],
+        [
+          { radius: 800, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#f2eddd', '#4e4c45'] },
+          { radius: 800, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'] },
+          { radius: 600, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'] },
+          { radius: 180, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'] },
+          { radius: 100, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'] },
+          { radius: 70, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'] }
+        ],
+        [
+          { radius: 800, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#f2eddd', '#4e4c45'] },
+          { radius: 800, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'] },
+          { radius: 550, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'] },
+          { radius: 140, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'] },
+          { radius: 100, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'] },
+          { radius: 60, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'] }
+        ],
+        [
+          { radius: 800, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#f2eddd', '#4e4c45'] },
+          { radius: 720, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'] },
+          { radius: 500, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'] },
+          { radius: 120, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'] },
+          { radius: 100, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'] },
+          { radius: 40, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'] }
+        ],
+        [
+          { radius: 800, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#f2eddd', '#4e4c45'] },
+          { radius: 690, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'] },
+          { radius: 450, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'] },
+          { radius: 100, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'] },
+          { radius: 100, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'] },
+          { radius: 1, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'] }
+        ],
+        [ // frame 21
+          { radius: 750, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#f2eddd', '#4e4c45'], rotation: PI / 180 },
+          { radius: 670, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'], rotation: PI / 180 },
+          { radius: 430, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'], rotation: PI / 180 },
+          { radius: 90, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'], rotation: PI / 180 },
+          { radius: 90, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'], rotation: PI / 180 },
+          { radius: 1, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'], rotation: PI / 180 }
+        ],
+        [
+          { radius: 800, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#f2eddd', '#4e4c45'], rotation: PI / 160 },
+          { radius: 650, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'], rotation: PI / 160 },
+          { radius: 400, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'], rotation: PI / 160 },
+          { radius: 90, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'], rotation: PI / 160 },
+          { radius: 90, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'], rotation: PI / 160 },
+          { radius: 1, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'], rotation: PI / 160 }
+        ],
+        [
+          { radius: 800, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#f2eddd', '#4e4c45'], rotation: PI / 140 },
+          { radius: 590, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'], rotation: PI / 140 },
+          { radius: 300, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'], rotation: PI / 140 },
+          { radius: 70, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'], rotation: PI / 140 },
+          { radius: 70, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'], rotation: PI / 140 },
+          { radius: 1, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'], rotation: PI / 140 }
+        ],
+        [
+          { radius: 720, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#507692', '#4e4c45'], rotation: PI / 120 },
+          { radius: 490, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'], rotation: PI / 120 },
+          { radius: 200, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'], rotation: PI / 120 },
+          { radius: 70, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'], rotation: PI / 120 },
+          { radius: 70, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'], rotation: PI / 120 },
+          { radius: 1, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'], rotation: PI / 120 }
+        ],
+        [
+          { radius: 990, colors: ['#ffffff', '#ffffff', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 100 },
+          { radius: 720, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#507692', '#4e4c45'], rotation: PI / 100 },
+          { radius: 380, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'], rotation: PI / 100 },
+          { radius: 100, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'], rotation: PI / 100 },
+          { radius: 65, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'], rotation: PI / 100 },
+          { radius: 65, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'], rotation: PI / 100 },
+          { radius: 1, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'], rotation: PI / 100 }
+        ],
+        [ // frame 26
+          { radius: 990, colors: ['#ffffff', '#ffffff', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 35, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 620, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#507692', '#4e4c45'], rotation: PI / 35, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 380, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'], rotation: PI / 35, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'], rotation: PI / 35, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'], rotation: PI / 35, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'], rotation: PI / 35, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'], rotation: PI / 35, waveAmplitude: 2.5, waveFrequency: 6, wavy: true }
+        ],
+        [ // frame 27
+          { radius: 990, colors: ['#ffffff', '#ffffff', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 34, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 620, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#507692', '#4e4c45'], rotation: PI / 34, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 350, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'], rotation: PI / 34, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'], rotation: PI / 34, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'], rotation: PI / 34, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'], rotation: PI / 34, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'], rotation: PI / 34, waveAmplitude: 2.5, waveFrequency: 6, wavy: true }
+        ],
+        [ // frame 28
+          { radius: 990, colors: ['#ffffff', '#ffffff', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 33, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 610, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#507692', '#4e4c45'], rotation: PI / 33, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 250, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'], rotation: PI / 33, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'], rotation: PI / 33, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'], rotation: PI / 33, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'], rotation: PI / 33, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'], rotation: PI / 33, waveAmplitude: 2.5, waveFrequency: 6, wavy: true }
+        ],
+        [ // frame 29
+          { radius: 990, colors: ['#ffffff', '#ffffff', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 32, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 510, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#507692', '#4e4c45'], rotation: PI / 32, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 100, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'], rotation: PI / 32, waveAmplitude: 2.5, waveFrequency: 2, wavy: true },
+          { radius: 0, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'], rotation: PI / 32, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'], rotation: PI / 32, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'], rotation: PI / 32, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'], rotation: PI / 32, waveAmplitude: 2.5, waveFrequency: 6, wavy: true }
+        ],
+        [ // frame 30
+          { radius: 990, colors: ['#ffffff', '#ffffff', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 31, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 410, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#507692', '#4e4c45'], rotation: PI / 31, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'], rotation: PI / 31, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'], rotation: PI / 31, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'], rotation: PI / 31, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'], rotation: PI / 31, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'], rotation: PI / 31, waveAmplitude: 2.5, waveFrequency: 6, wavy: true }
+        ],
+        [ // frame 31
+          { radius: 980, colors: ['#fbac4c', '#ffffff', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 30, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 400, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#507692', '#4e4c45'], rotation: PI / 30, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'], rotation: PI / 30, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'], rotation: PI / 30, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'], rotation: PI / 30, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'], rotation: PI / 30, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'], rotation: PI / 30, waveAmplitude: 2.5, waveFrequency: 6, wavy: true }
+        ],
+        [ // frame 32
+          { radius: 980, colors: ['#fbac4c', '#f2eddd', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 29, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 300, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#507692', '#4e4c45'], rotation: PI / 29, waveAmplitude: 2.5, waveFrequency: 6, wavy: true }
+        ],
+        [ // frame 33
+          { radius: 980, colors: ['#fbac4c', '#f2eddd', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 28, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 200, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#507692', '#4e4c45'], rotation: PI / 28, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'], rotation: PI / 9, waveAmplitude: 2.5, waveFrequency: 6 },
+          { radius: 0, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'], rotation: PI / 9, waveAmplitude: 2.5, waveFrequency: 6 },
+          { radius: 0, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'], rotation: PI / 9, waveAmplitude: 2.5, waveFrequency: 6 },
+          { radius: 0, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'], rotation: PI / 9, waveAmplitude: 2.5, waveFrequency: 6 },
+          { radius: 0, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'], rotation: PI / 9, waveAmplitude: 2.5, waveFrequency: 6 }
+        ],
+        [ // frame 34
+          { radius: 980, colors: ['#fbac4c', '#f2eddd', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 27, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 100, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#507692', '#4e4c45'], rotation: PI / 27, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'], rotation: PI / 8, waveAmplitude: 2.5, waveFrequency: 6, wavy: false },
+          { radius: 0, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'], rotation: PI / 8, waveAmplitude: 2.5, waveFrequency: 6, wavy: false },
+          { radius: 0, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'], rotation: PI / 8, waveAmplitude: 2.5, waveFrequency: 6, wavy: false },
+          { radius: 0, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'], rotation: PI / 8, waveAmplitude: 2.5, waveFrequency: 6, wavy: false },
+          { radius: 0, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'], rotation: PI / 8, waveAmplitude: 2.5, waveFrequency: 6, wavy: false }
+        ],
+        [ // frame 35
+          { radius: 950, colors: ['#fbac4c', '#f2eddd', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 26, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 90, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#507692', '#4e4c45'], rotation: PI / 26, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'], rotation: PI / 7, waveAmplitude: 2.5, waveFrequency: 6, wavy: false },
+          { radius: 0, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'], rotation: PI / 7, waveAmplitude: 2.5, waveFrequency: 6, wavy: false },
+          { radius: 0, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'], rotation: PI / 7, waveAmplitude: 2.5, waveFrequency: 6, wavy: false },
+          { radius: 0, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'], rotation: PI / 7, waveAmplitude: 2.5, waveFrequency: 6, wavy: false },
+          { radius: 0, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'], rotation: PI / 7, waveAmplitude: 2.5, waveFrequency: 6, wavy: false }
+        ],
+        [ // frame 36
+          { radius: 900, colors: ['#fbac4c', '#f2eddd', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 24, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 50, colors: ['#f2eddd', '#517792', '#fbac4c', '#f2eddd', '#507692', '#4e4c45'], rotation: PI / 24, waveAmplitude: 2, waveFrequency: 0, wavy: true },
+          { radius: 0, colors: ['#1f242d', '#f34a18', '#f2eddd', '#1f242d', '#f44a18', '#507692'], rotation: PI / 7, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#fbab4c', '#f2eddd', '#f44a18', '#4e4c45', '#507692', '#f54a18'], rotation: PI / 7, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c', '#1c1c1c'], rotation: PI / 7, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#f2eddd', '#4e4c45', '#517792', '#fbab4c', '#fbab4c', '#f2eddd'], rotation: PI / 7, waveAmplitude: 2.5, waveFrequency: 6, wavy: true },
+          { radius: 0, colors: ['#f44a18', '#fbab4c', '#f2eddd', '#f34a18', '#517792', '#f2eddd'], rotation: PI / 7, waveAmplitude: 2.5, waveFrequency: 6, wavy: true }
+        ],
+        [ // frame 37
+          { radius: 900, colors: ['#fbac4c', '#f2eddd', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 23, waveAmplitude: 10, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 38
+          { radius: 900, colors: ['#fbac4c', '#f2eddd', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 23, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 38
+          { radius: 900, colors: ['#fbac4c', '#f2eddd', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 22, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 38
+          { radius: 900, colors: ['#fbac4c', '#f2eddd', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 22, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 38
+          { radius: 900, colors: ['#fbac4c', '#f2eddd', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 21, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 38
+          { radius: 900, colors: ['#fbac4c', '#f2eddd', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 21, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 38
+          { radius: 900, colors: ['#fbac4c', '#f2eddd', '#1f242d', '#fbac4c', '#f2eddd', '#f54a18'], rotation: PI / 20, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 39
+          { radius: 900, colors: ['#f44a18', '#f2eddd', '#1f242d', '#1f242d', '#f2eddd', '#f54a18'], rotation: PI / 21, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 39
+          { radius: 900, colors: ['#f44a18', '#f2eddd', '#1f242d', '#1f242d', '#f2eddd', '#f54a18'], rotation: PI / 21, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 39
+          { radius: 900, colors: ['#f44a18', '#f2eddd', '#1f242d', '#1f242d', '#f2eddd', '#f54a18'], rotation: PI / 21, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 40
+          { radius: 900, colors: ['#f44a18', '#f2eddd', '#1f242d', '#1f242d', '#f2eddd', '#f54a18'], rotation: PI / 20, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 40
+          { radius: 900, colors: ['#f44a18', '#f2eddd', '#1f242d', '#1f242d', '#f2eddd', '#f54a18'], rotation: PI / 20, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 40
+          { radius: 900, colors: ['#f44a18', '#f2eddd', '#1f242d', '#1f242d', '#f2eddd', '#f54a18'], rotation: PI / 20, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 40
+          { radius: 900, colors: ['#f44a18', '#f2eddd', '#1f242d', '#1f242d', '#f2eddd', '#f54a18'], rotation: PI / 20, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 41
+          { radius: 900, colors: ['#f44a18', '#1f242d', '#1f242d', '#1f242d', '#f44a18', '#f54a18'], rotation: PI / 19, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 41
+          { radius: 900, colors: ['#f44a18', '#1f242d', '#1f242d', '#1f242d', '#f44a18', '#f54a18'], rotation: PI / 19, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 41
+          { radius: 900, colors: ['#f44a18', '#1f242d', '#1f242d', '#1f242d', '#f44a18', '#f54a18'], rotation: PI / 19, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 41
+          { radius: 900, colors: ['#f44a18', '#1f242d', '#1f242d', '#1f242d', '#f44a18', '#f54a18'], rotation: PI / 19, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 41
+          { radius: 900, colors: ['#f44a18', '#f44a18', '#f44a18', '#1f242d', '#f44a18', '#f54a18'], rotation: PI / 18, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 41
+          { radius: 900, colors: ['#f44a18', '#f44a18', '#f44a18', '#f44a18', '#f44a18', '#f44a18'], rotation: PI / 15, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 41
+          { radius: 900, colors: ['#f44a18', '#f44a18', '#f44a18', '#f44a18', '#f44a18', '#f44a18'], rotation: PI / 15, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 41
+          { radius: 900, colors: ['#f44a18', '#f44a18', '#f44a18', '#f44a18', '#f44a18', '#f44a18'], rotation: PI / 15, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 41
+          { radius: 900, colors: ['#f44a18', '#f44a18', '#f44a18', '#f44a18', '#f44a18', '#f44a18'], rotation: PI / 15, waveAmplitude: 30, waveFrequency: 2.6, wavy: true }
+        ],
+        [ // frame 41
+          { radius: 900, colors: ['#f44a18', '#f44a18', '#f44a18', '#f44a18', '#f44a18', '#f44a18'], rotation: PI / 15 }
+        ]
+      ];
+
+      hexagonStarted = true;
+
+      updateTotalDuration();
+    }
+
+    function draw() {
+      let elapsed = millis() - startTime;
+
+      if (elapsed < hexagonDuration) {
+        if (hexagonStarted) {
+          background(28, 28, 28); 
+          drawHexagonFrame(elapsed);
+        }
+      } else if (elapsed < hexagonDuration + delayDuration) {
+        // Delay after hexagon transition
+      } else if (elapsed < hexagonDuration + delayDuration + ringDuration) {
+        if (!ringStarted) {
+          hexagonStarted = false;
+          ringStarted = true;
+        }
+        background('#f2eddd'); 
+        drawRingsTransition(elapsed - hexagonDuration - delayDuration);
+      } else if (elapsed < hexagonDuration + delayDuration + ringDuration + delayDuration) {
+        // Delay after ring transition
+      } else {
+        if (!mStarted) {
+          mStarted = true;
+          mTransitionStartTime = millis();
+          document.body.style.backgroundColor = '#20252e'; 
+        }
+        background('#20252e'); // Dark background for "M"
+        drawMTransition(elapsed - hexagonDuration - 2 * delayDuration - ringDuration);
+      }
+
+      if (elapsed >= totalDuration) {
+        resetAnimation(); 
+      }
+    }
+
+    function drawRingsTransition(elapsed) {
+      let t = map(elapsed, 0, ringDuration, 0, 1);
+      t = constrain(t, 0, 1);
+
+      // Non-linear zoom rate with easing function
+      let easedT = easeInOutQuad(t);
+      
+      
+      let zoomOutFactor = lerp(30, 1, easedT); // Start at 30x zoom and end at 1x
+      
+      //  horizontal translation offset
+      let maxOffset = 25; // Maximum offset to the left
+      let offset = lerp(-maxOffset, 0, easedT); // Interpolate from maxOffset to 0
+
+      push();
+      
+      translate(width / 2, height / 2);
+      scale(zoomOutFactor);
+      translate(-width / 2, -height / 2); 
+
+      //  horizontal translation offset
+      translate(offset, 0);
+
+      //  left ring
+      drawRing(width / 2 - 200, height / 2, 250, 56, '#20252e', '#f34b19');
+
+      // right ring
+      drawRing(width / 2 + 200, height / 2, 250, 56, '#20252e', '#f34b19');
+
+      pop();
+    }
+
+    function drawRing(centerX, centerY, outerRadius, ringThickness, color1, color2) {
+      let innerRadius = outerRadius - ringThickness;
+
+      //  outer part of the ring
+      stroke(color1);
+      strokeWeight(ringThickness);
+      noFill();
+      ellipse(centerX, centerY, outerRadius * 2, outerRadius * 2);
+
+      //  inner part of the ring slightly shifted inside
+      stroke(color2);
+      strokeWeight(ringThickness);
+      noFill();
+      ellipse(centerX - ringThickness / 4, centerY - ringThickness / 4, innerRadius * 2.5, innerRadius * 2.5);
+    }
+
+    function drawMTransition(elapsed) {
+      if (expanding) {
+        t += 0.01; //  for faster animation
+        if (t >= 1) {
+          t = 1;
+          expanding = false;
+        }
+      }
+      drawInterlockedM(width / 2, height / 2, t);
+
+      if (!expanding) {
+        background('#20252e'); 
+
+       
+       let imgX = width / 2;
+        let imgY = height / 2 - 50;
+        let imgWidth = img.width * (1 + sin(elapsed / 500) * 0.1); 
+        let imgHeight = img.height * (1 + sin(elapsed / 500) * 0.1); 
+
+        fill('#808080'); 
+        noStroke();
+        rectMode(CENTER);
+        rect(imgX, imgY, imgWidth, imgHeight);
+
+        imageMode(CENTER);
+        image(img, imgX, imgY, imgWidth, imgHeight); 
+
+        // text "CRESCENDO INTERNATIONAL COLLEGE"
+        textSizeFactor += 0.05;
+        if (textSizeFactor > 2) textSizeFactor = 2;
+        textSize(25 * textSizeFactor * (1 + sin(elapsed / 500) * 0.1)); 
+        fill('#FFFFFF'); 
+        textAlign(CENTER, CENTER);
+        textFont('Arial'); 
+        noStroke();
+        text('CRESCENDO INTERNATIONAL COLLEGE', width / 2, imgY + imgHeight / 2 + 40);
+    }
+    }
+
+    function drawInterlockedM(centerX, centerY, t) {
+      let size = 200; 
+      let thickness = 45; 
+      let depth = 20; 
+
+      // Colors
+      let color1 = '#f4a15d'; // Orange
+      let depthColor = '#517a96'; // Blue
+
+      //  blue depth effect shape
+      drawDepthM(centerX, centerY, size, thickness, depth, depthColor, t);
+
+      //  orange M shape (outer)
+      drawSingleM(centerX, centerY, size, thickness, color1, t);
+    }
+
+    function drawSingleM(centerX, centerY, size, thickness, color, t) {
+      strokeWeight(35);
+      strokeJoin(ROUND); 
+      noFill();
+      stroke(color);
+
+      let leftX = lerp(centerX, centerX - 1.5 * size, t);
+      let rightX = lerp(centerX, centerX + 1.5 * size, t);
+      let bottomMiddleY = lerp(centerY, centerY + 0.5 * size, t);
+
+      beginShape();
+      vertex(leftX, centerY + 0.5 * size);                // Bottom left
+      vertex(centerX - 0.75 * size, centerY - 0.5 * size);  // Top left
+      vertex(centerX, bottomMiddleY);                      // Bottom middle (animated)
+      vertex(centerX + 0.75 * size, centerY - 0.5 * size);  // Top right
+      vertex(rightX, centerY + 0.5 * size);               // Bottom right
+      vertex(centerX + 0.75 * size, centerY + 0.5 * size);  // Bottom middle right
+      vertex(centerX, centerY - 0.5 * size);                // Top middle
+      vertex(centerX - 0.75 * size, centerY + 0.5 * size);  // Bottom middle left
+      endShape(CLOSE);
+    }
+
+    function drawDepthM(centerX, centerY, size, thickness, depth, color, t) {
+      strokeWeight(35);
+      strokeJoin(ROUND); 
+      noFill();
+      stroke(color);
+
+      let leftX = lerp(centerX, centerX - 1.5 * size, t);
+      let rightX = lerp(centerX, centerX + 1.5 * size, t);
+      let bottomMiddleY = lerp(centerY, centerY + 0.5 * size, t);
+
+      let points = [
+        { x: leftX, y: centerY + 0.5 * size }, // Bottom left
+        { x: centerX - 0.75 * size, y: centerY - 0.5 * size }, // Top left
+        { x: centerX, y: bottomMiddleY }, // Bottom middle (animated)
+        { x: centerX + 0.75 * size, y: centerY - 0.5 * size }, // Top right
+        { x: rightX, y: centerY + 0.5 * size }, // Bottom right
+        { x: centerX + 0.75 * size, y: centerY + 0.5 * size }, // Bottom middle right
+        { x: centerX, y: centerY - 0.5 * size }, // Top middle
+        { x: centerX - 0.75 * size, y: centerY + 0.5 * size } // Bottom middle left
+      ];
+
+      for (let i = 0; i < points.length; i++) {
+        let current = points[i];
+        let next = points[(i + 1) % points.length];
+
+        beginShape();
+        vertex(current.x, current.y);
+        vertex(current.x + depth, current.y + depth);
+        vertex(next.x + depth, next.y + depth);
+        vertex(next.x, next.y);
+        endShape(CLOSE);
+      }
+    }
+
+    // Easing function for smoother transitions
+    function easeInOutQuad(x) {
+      return x < 0.5 ? 2 * x * x : 1 - Math.pow(-2 * x + 2, 2) / 2;
+    }
+
+    function drawHexagonFrame(elapsed) {
+      background(28, 28, 28); 
+      let frameIndex = floor(map(elapsed, 0, hexagonDuration, 0, frames.length));
+      drawFrame(frameIndex); 
+    }
+
+    function drawHexagon(centerX, centerY, radius, colors, rotationOffset = 0, waveAmplitude = 0, waveFrequency = 0, wavy = false) {
+      let hexagonVertices = [];
+      for (let i = 0; i < 6; i++) {
+        let angle = PI / 3 * i + rotationOffset;
+        let x = cos(angle) * radius;
+        let y = sin(angle) * radius;
+        if (wavy) {
+          x += sin(angle * waveFrequency) * waveAmplitude;
+          y += cos(angle * waveFrequency) * waveAmplitude;
+        }
+        hexagonVertices.push({ x: x, y: y });
+      }
+
+      push(); 
+      translate(centerX, centerY); 
+      rotate(PI / 6 + rotationOffset); // Rotate by 30 degrees (PI/6 radians) + rotationOffset
+
+      noStroke();
+
+      
+      //  hexagon sections with the appropriate colors
+      for (let i = 0; i < 6; i++) {
+        fill(colors[i]);
+        beginShape();
+        vertex(0, 0);
+        let start = hexagonVertices[i];
+        let end = hexagonVertices[(i + 1) % 6];
+        let wavePoints = 100; //  points for smoother waves
+        for (let j = 0; j <= wavePoints; j++) {
+          let t = j / wavePoints;
+          let x = lerp(0, start.x, t);
+          let y = lerp(0, start.y, t);
+          if (wavy) {
+            // sine wave to the x and y coordinates
+            let waveOffset = sin(t * PI * waveFrequency) * waveAmplitude; 
+            let waveAngle = atan2(end.y - start.y, end.x - start.x);
+            x += cos(waveAngle + HALF_PI) * waveOffset;
+            y += sin(waveAngle + HALF_PI) * waveOffset;
+          }
+          vertex(x, y);
+        }
+        vertex(end.x, end.y); // Connect to the next vertex to withtout no gaps
+        endShape(CLOSE);
+      }
+
+      pop(); 
+    }
+
+    function drawFrame(frameIndex) {
+      const properties = frames[frameIndex % frames.length];
+      properties.forEach(prop => {
+        drawHexagon(width / 2, height / 2, prop.radius, prop.colors, prop.rotation || 0, prop.waveAmplitude, prop.waveFrequency, prop.wavy || false);
+      });
+    }
+
+    function updateTotalDuration() {
+      totalDuration = hexagonDuration + ringDuration + mDuration + 2 * delayDuration;
+    }
+
+    function resetAnimation() {
+      startTime = millis();
+      mStarted = false;
+      hexagonStarted = true;
+      ringStarted = false;
+      t = 0.5; 
+      expanding = true; 
+      loop(); // Restart the draw loop
+    }
+  </script>
+</body>
+</html>
